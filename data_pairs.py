@@ -90,43 +90,60 @@ def generate_pairs(turns: List[Dict]) -> List[Dict]:
         })
     return pairs
 
-def evaluate_response(actionability, mistake_identification, mistake_location, providing_guidance):
+def evaluate_response(item):
     """根据评分标准判断该回复的水平"""
     score = 0
+    ML = item["Mistake_Location"]
+    MI = item["Mistake_Identification"]
+    PG = item["Providing_Guidance"]
+    AC = item["Actionability"]
 
     # 为每个参数赋分
-    if actionability == "Yes":
+    if AC == "Yes":
         score += 2
-    elif actionability == "To some extent":
+    elif AC == "To some extent":
         score += 1
+    elif AC == "No":
+        score += 0
 
-    if mistake_identification == "Yes":
+    if MI == "Yes":
         score += 2
-    elif mistake_identification == "To some extent":
+    elif MI == "To some extent":
         score += 1
+    elif MI == "No":
+        score += 0
 
-    if mistake_location == "Yes":
+    if ML == "Yes":
         score += 2
-    elif mistake_location == "To some extent":
+    elif ML == "To some extent":
         score += 1
+    elif ML == "No":
+        score += 0
 
-    if providing_guidance == "Yes":
+    if PG == "Yes":
         score += 2
-    elif providing_guidance == "To some extent":
+    elif PG == "To some extent":
         score += 1
+    elif PG == "No":
+        score += 0
+
+    return score
 
 # 主处理流程
 def main():
     with open(INPUT_FILE, 'r', encoding='utf-8') as f:
         raw_data = json.load(f)  # 假设输入格式为 [{"conversation_history": "..."}]
-
     all_pairs = [] # 用于存储所有生成的对话对
     for item in raw_data:
+
         # 选出不同模型中最好的回复并添加到对话历史中
         best_responce = "hello! everyOne!!"
+        score = -1
         for text in item["tutor_responses"]:
-            print(clean_text(item["tutor_responses"][text]["response"]))
-
+            responce_score = evaluate_response(item["tutor_responses"][text]["annotation"])
+            if responce_score > score:
+                score = responce_score
+                best_responce = item["tutor_responses"][text]["response"]
 
         responce = item["conversation_history"] + " \n Tutor:" + best_responce
         # 将对话历史拆分为结构化的轮次
