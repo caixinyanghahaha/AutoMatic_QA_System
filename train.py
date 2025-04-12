@@ -1,8 +1,9 @@
-from transformers import TrainingArguments, Trainer
 import torch
-from utils_data import EducationDataset
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from transformers import DataCollatorForLanguageModeling
+from transformers import TrainingArguments, Trainer
+
+from utils_data import EducationDataset
 
 model_name = "microsoft/DialoGPT-medium"
 # 添加设备检测
@@ -64,7 +65,7 @@ def train():
 
     # 保存模型
     model.save_pretrained("./model/education_dialog_model", torch_dtype=torch.float32)
-    tokenizer.save_pretrained("./model/education_dialog_model")
+    tokenizer.save_pretrained("./model/education_dialog_model/tokenizer")
 
 def generate_response(model, tokenizer, context, max_length=100):
     input_text = f"{context}{tokenizer.eos_token}"

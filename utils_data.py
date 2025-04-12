@@ -1,5 +1,7 @@
 import json
+
 from torch.utils.data import Dataset
+
 
 class EducationDataset(Dataset):
     def __init__(self, file_path, tokenizer, max_length=128):
