@@ -1,9 +1,8 @@
 from transformers import AutoModelForCausalLM, BitsAndBytesConfig
-from peft import LoraConfig
-
+from peft import LoraConfig, get_peft_model
 
 class ModelLoader:
-    """模型加载模块（内置模型配置）"""
+    """模型加载模块"""
 
     MODEL_CONFIG = {
         "model_name": "deepseek-ai/deepseek-math-7b",
@@ -27,7 +26,7 @@ class ModelLoader:
         """加载基础模型"""
         model = AutoModelForCausalLM.from_pretrained(
             self.MODEL_CONFIG["model_name"],
-            quantization_config=BitsAndBytesConfig(**self.MODEL_CONFIG["quant_config"]),
+            quantization_config=BitsAndBytesConfig(**self.MODEL_CONFIG["quant_config"]), # 载入配置文件
             device_map="auto", # 自动分割到可使用的GPU和CPU
             trust_remote_code=True # 允许执行模型自带的自定义代码
         )
@@ -35,6 +34,5 @@ class ModelLoader:
 
     def _apply_lora(self, model):
         """应用LoRA适配器"""
-        from peft import get_peft_model
-        peft_config = LoraConfig(**self.MODEL_CONFIG["lora_config"])
+        peft_config = LoraConfig(**self.MODEL_CONFIG["lora_config"]) # 载入配置文件
         return get_peft_model(model, peft_config)

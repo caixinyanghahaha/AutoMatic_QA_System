@@ -14,8 +14,8 @@ from transformers import AutoTokenizer
 """
 
 # ========== 配置部分 ==========
-INPUT_FILE = "data/mrbench_v3_devset.json"  # 输入文件路径（需提前准备）
-OUTPUT_FILE = "data/dialogpt_formatted.json"  # 输出文件路径
+INPUT_FILE = "../data/mrbench_v3_devset.json"  # 输入文件路径（需提前准备）
+OUTPUT_FILE = "../data/dialogpt_formatted.json"  # 输出文件路径
 MODEL_NAME = "microsoft/DialoGPT-medium"  # 或替换为其他版本如 'microsoft/DialoGPT-large'
 # =============================
 

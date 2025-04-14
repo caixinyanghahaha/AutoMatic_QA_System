@@ -3,7 +3,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from transformers import DataCollatorForLanguageModeling
 from transformers import TrainingArguments, Trainer
 
-from utils_data import EducationDataset
+from utils_data_DialoGPT import EducationDataset
 
 model_name = "microsoft/DialoGPT-medium"
 # 添加设备检测
@@ -26,7 +26,7 @@ print(f"模型参数量: {model.num_parameters()/1e6:.1f}M")
 
 def train():
     # 数据加载器优化
-    train_dataset = EducationDataset("data/dialog_pairs.json", tokenizer)
+    train_dataset = EducationDataset("../data/dialog_pairs.json", tokenizer)
     data_collator = DataCollatorForLanguageModeling(
         tokenizer=tokenizer,
         mlm=False  # 不使用掩码语言模型

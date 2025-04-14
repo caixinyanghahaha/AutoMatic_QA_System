@@ -34,7 +34,12 @@ def clean_text(text: str) -> str:
 def split_conversation(history: str) -> List[Dict]:
     """将原始对话字符串拆分为结构化轮次"""
     # 用于存储每一轮对话的信息，最终作为返回值。
-    turns = []
+    turns = [
+        {
+            "role": "system",
+            "content": 'You are a mathematics tutoring assistant. Your role is to guide students through Socratic questioning.'
+        }
+    ]
     current_speaker = None
     current_text = []
     # 将整个对话按行分割，并逐行处理。
@@ -50,6 +55,12 @@ def split_conversation(history: str) -> List[Dict]:
         speaker_match = re.match(r'^(Tutor|Student|老师|学生)[：:]?\s*(.*)', line)
         if speaker_match:
             if current_speaker and current_text:  # 保存上一轮
+                # 根据角色设置名称
+                if current_speaker == "Tutor":
+                    current_speaker = "assistant"
+                elif current_speaker == "Student":
+                    current_speaker = "user"
+
                 turns.append({
                     "role": current_speaker,
                     "content": ' '.join(current_text)
@@ -61,6 +72,12 @@ def split_conversation(history: str) -> List[Dict]:
 
     # 在循环结束后，检查是否还有未保存的最后一轮对话，如果有，将其添加到 turns 列表中。
     if current_speaker and current_text:
+        # 根据角色设置名称
+        if current_speaker == "Tutor":
+            current_speaker = "assistant"
+        elif current_speaker == "Student":
+            current_speaker = "user"
+
         turns.append({
             "role": current_speaker,
             "content": ' '.join(current_text)

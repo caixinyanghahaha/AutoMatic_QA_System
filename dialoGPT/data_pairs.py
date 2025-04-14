@@ -15,8 +15,8 @@ from transformers import AutoTokenizer
 """
 
 # 配置部分
-INPUT_FILE = "data/mrbench_v3_devset.json"  # 输入文件路径
-OUTPUT_FILE = "data/dialog_pairs.json"  # 输出文件路径
+INPUT_FILE = "../data/mrbench_v3_devset.json"  # 输入文件路径
+OUTPUT_FILE = "../data/dialog_pairs.json"  # 输出文件路径
 MODEL_NAME = "microsoft/DialoGPT-medium"  # 用于分词的模型
 MIN_CONTEXT_TURNS = 1  # 上下文最少轮次, 确保生成的对话对至少包含指定数量的历史轮次。这有助于确保上下文足够丰富，以便模型能够理解对话的背景，从而生成更相关的响应。
 MAX_HISTORY = 3  # 最大历史轮次数（防止过长）, 限制用于生成上下文的历史轮次数，以防止上下文过长，导致输入超出模型的处理能力。这有助于保持输入的有效性和效率，同时避免模型因上下文过多而产生的性能下降
