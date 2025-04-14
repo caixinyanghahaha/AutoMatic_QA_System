@@ -34,12 +34,7 @@ def clean_text(text: str) -> str:
 def split_conversation(history: str) -> List[Dict]:
     """将原始对话字符串拆分为结构化轮次"""
     # 用于存储每一轮对话的信息，最终作为返回值。
-    turns = [
-        {
-            "role": "system",
-            "content": 'You are a mathematics tutoring assistant. Your role is to guide students through Socratic questioning.'
-        }
-    ]
+    turns = []
     current_speaker = None
     current_text = []
     # 将整个对话按行分割，并逐行处理。

@@ -6,7 +6,6 @@ from datasets import Dataset
 import json
 
 def main():
-    # 数据预处理
     model_name = "deepseek-ai/DeepSeek-R1"
 
     data_tokenizer = Data_Tokenizer(model_name)
@@ -17,19 +16,29 @@ def main():
     dataset = Dataset.from_dict({"messages": processed_data})
     tokenized = dataset.map(data_tokenizer.tokenize, batched=True)
 
-    # 模型加载
-    loader = ModelLoader()
+    # # 模型加载
+    loader = ModelLoader(model_name)
     model = loader.load()
-
-    # 训练
+    #
+    # # 训练
     trainer = MathTutorTrainer(model, data_tokenizer.tokenizer, tokenized)
     trainer.train()
+
+    # 训练完成后，保存适配器，适用于LoRA等参数高效微调。
+    model.save_pretrained(
+        "./output/math_tutor_lora",
+        save_embedding_layers=False,
+        safe_serialization=True
+    )
+    # 同时保存基础模型信息
+    with open("./output/math_tutor_lora/base_model.txt", "w") as f:
+        f.write(model_name)  # 记录基础模型版本
 
     # 测试生成
     # generator = ResponseGenerator(model, data_tokenizer.tokenizer)
     # test_history = [{
     #     "role": "Student",
-    #     "content": "总成本计算正确吗？我的答案是$100"
+    #     "content": "Is the total cost calculation correct? My answer is $100"
     # }]
     # print(generator.generate(test_history))
 

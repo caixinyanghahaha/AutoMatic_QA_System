@@ -2,7 +2,6 @@ import json
 from torch.fx.experimental.unification.unification_tools import merge_with
 from transformers import AutoTokenizer
 
-
 class Data_Tokenizer:
     """数据预处理模块（内置参数配置）"""
 
@@ -53,7 +52,6 @@ class Data_Tokenizer:
                     add_generation_prompt=True  # 添加生成提示符
                 )
             )
-        print(formatted)
 
         tokenized = self.tokenizer(
             formatted,  # 格式化输入数据为适合训练的文本格式
