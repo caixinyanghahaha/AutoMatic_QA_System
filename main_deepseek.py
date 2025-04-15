@@ -16,23 +16,26 @@ def main():
     dataset = Dataset.from_dict({"messages": processed_data})
     tokenized = dataset.map(data_tokenizer.tokenize, batched=True)
 
+    generator = ResponseGenerator(model_name, data_tokenizer.tokenizer)
+    generator.chat_loop()
+
     # # 模型加载
-    loader = ModelLoader(model_name)
-    model = loader.load()
+    # loader = ModelLoader(model_name)
+    # model = loader.load()
     #
     # # 训练
-    trainer = MathTutorTrainer(model, data_tokenizer.tokenizer, tokenized)
-    trainer.train()
-
-    # 训练完成后，保存适配器，适用于LoRA等参数高效微调。
-    model.save_pretrained(
-        "./output/math_tutor_lora",
-        save_embedding_layers=False,
-        safe_serialization=True
-    )
-    # 同时保存基础模型信息
-    with open("./output/math_tutor_lora/base_model.txt", "w") as f:
-        f.write(model_name)  # 记录基础模型版本
+    # trainer = MathTutorTrainer(model, data_tokenizer.tokenizer, tokenized)
+    # trainer.train()
+    #
+    # # 训练完成后，保存适配器，适用于LoRA等参数高效微调。
+    # model.save_pretrained(
+    #     "./output/math_tutor_lora",
+    #     save_embedding_layers=False,
+    #     safe_serialization=True
+    # )
+    # # 同时保存基础模型信息
+    # with open("./output/math_tutor_lora/base_model.txt", "w") as f:
+    #     f.write(model_name)  # 记录基础模型版本
 
     # 测试生成
     # generator = ResponseGenerator(model, data_tokenizer.tokenizer)
