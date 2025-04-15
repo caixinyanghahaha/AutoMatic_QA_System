@@ -7,13 +7,20 @@ import torch
 class MathTutorTrainer:
     """训练模块"""
     TRAIN_CONFIG = {
+
+        # 禁用所有保存功能
+        # "save_strategy": "epoch", # 保存策略（epoch：美伦每轮结束之后保存模型）
+        "save_strategy": "no",  # 关闭保存策略
+        "save_steps": None,  # 必须设为None
+        "save_total_limit": None,  # 关闭检查点限制
+        "no_cuda": False,  # 保持GPU加速
+
         "output_dir": "./output", # 输出目录
         "per_device_train_batch_size": 4, # 每个设备的训练批次（单GPU的批次大小）
         "gradient_accumulation_steps": 8, # 梯度累积步数，用于模拟更大的批次（总批次大小= 2 * 4）
         "num_train_epochs": 30, # 训练轮次
         "learning_rate": 3e-5, # 学习率
         "logging_steps": 10, # 每10步记录一次训练日志
-        "save_strategy": "epoch", # 保存策略（epoch：美伦每轮结束之后保存模型）
         "fp16": torch.cuda.get_device_capability()[0] >= 7,  # 根据GPU架构自动启用, Volta架构及以上启用
         "bf16": torch.cuda.is_bf16_supported(),  # Ampere架构优先
         "optim": "paged_adamw_32bit", # 使用分页AdamW优化器，防止显存碎片
@@ -71,9 +78,8 @@ class MathTutorTrainer:
         print("初始显存占用:", torch.cuda.memory_allocated() / 1024 ** 3, "GB")
         trainer.train()
 
-        # 在您的 train() 方法返回 trainer 后添加
-        trainer.save_model("./output/final_model")
-        # 同时保存分词器
-        trainer.tokenizer.save_pretrained("./output/final_model/tokenizer")
+        # 在您的 train() 方法返回 trainer 后添加,同时保存分词器
+        # trainer.save_model("./output/final_model")
+        # trainer.tokenizer.save_pretrained("./output/final_model/tokenizer")
 
         return trainer

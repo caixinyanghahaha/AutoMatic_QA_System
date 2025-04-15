@@ -3,7 +3,7 @@ import torch
 
 
 class ResponseGenerator:
-    """回复生成模块"""
+    """使用原生模型回复生成模块"""
 
     GEN_CONFIG = {
         "max_new_tokens": 512, # 限制生成内容最多256个新Token

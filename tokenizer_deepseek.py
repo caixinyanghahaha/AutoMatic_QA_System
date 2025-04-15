@@ -49,10 +49,9 @@ class Data_Tokenizer:
                 self.tokenizer.apply_chat_template(
                     messages,
                     tokenize=False,  # 不立即分词
-                    add_generation_prompt=True  # 添加生成提示符
+                    add_generation_prompt=False  # 添加生成提示符
                 )
             )
-
         tokenized = self.tokenizer(
             formatted,  # 格式化输入数据为适合训练的文本格式
             truncation=True,  # 启用截断功能，确保不超过最大长度
