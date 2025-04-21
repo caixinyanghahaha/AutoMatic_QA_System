@@ -23,13 +23,10 @@ class ResponseGenerator:
             model_name,
             trust_remote_code=True,
             torch_dtype=torch.bfloat16,
-            device_map="auto"
+            device_map="auto",
+            offload_folder="./offload"  # 指定存储卸载权重的文件夹
         )
-        self.model = self.model.to('cuda') if torch.cuda.is_available() else self.model
         self.gen_config = GenerationConfig(**self.GEN_CONFIG)
-        # 处理可能的pad_token缺失问题
-        if self.tokenizer.pad_token is None:
-            self.tokenizer.pad_token = self.tokenizer.eos_token
 
 
     def generate(self, history):
@@ -46,9 +43,13 @@ class ResponseGenerator:
         ).to(self.model.device))
 
         outputs = self.model.generate(
-            inputs,
+            inputs['input_ids'],  # 传入输入ID
+            attention_mask=inputs['attention_mask'],  # 传入attention mask
             generation_config=self.gen_config
         )
+
+
+        print(outputs)
 
         return self.tokenizer.decode(
             outputs[0][inputs.shape[1]:],  # 移除输入，只保留新生成的Token

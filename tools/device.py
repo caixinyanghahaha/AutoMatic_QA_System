@@ -1,5 +1,22 @@
 import torch
 from accelerate import init_empty_weights
+from huggingface_hub import snapshot_download
+
+
+def test_device():
+    """测试设备是否可以使用GPU CUDA进行运算"""
+    print(f"PyTorch version: {torch.__version__}")
+    print(f"CUDA available: {torch.cuda.is_available()}")
+    print(f"Number of GPUs: {torch.cuda.device_count()}")
+    print(f"Current GPU: {torch.cuda.current_device()}")
+    print(f"GPU name: {torch.cuda.get_device_name(0)}")
+    print(f"cuDNN enabled: {torch.backends.cudnn.enabled}")
+
+    # 创建一个张量并移动到GPU
+    x = torch.rand(5, 3)
+    if torch.cuda.is_available():
+        x = x.to('cuda')
+        print(x)
 
 def get_device():
     if torch.backends.mps.is_available():
@@ -27,5 +44,12 @@ def load_model_safely(model_class, model_name, device):
         return model.to(device, dtype=torch.bfloat16)
     return model.to(device)
 
+def download_model():
+    snapshot_download(
+        repo_id="deepseek-ai/deepseek-math-7b-base",
+        local_dir="../local_models/deepseek-math-7b-base",
+        revision="main"
+    )
+
 if __name__ == "__main__":
-    print(clean_memory())
+    download_model()

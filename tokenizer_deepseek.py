@@ -7,7 +7,7 @@ class Data_Tokenizer:
 
     # 数据相关配置
     DATA_CONFIG = {
-        "max_seq_length": 512,  # 适配DeepSeek的长上下文能力
+        "max_seq_length": 64,  # 适配DeepSeek的长上下文能力
         "system_prefix": "<｜begin▁of▁sentence｜>System:\n", # 系统指令前缀，用于标记来自系统的初始化提示
         "eos_token": "<｜end▁of▁sentence｜>", # 结束标记
         "thinking_prefix": ["[Step]"], # 推理引导符，指示模型生成分步思考过程（训练时自动掩码，推理时触发逐步输出）
@@ -38,7 +38,8 @@ class Data_Tokenizer:
             "eos_token": self.tokenizer.eos_token
         })
 
-        self.tokenizer.chat_template = self.DATA_CONFIG["dialog_template"]
+        self.tokenizer.chat_template = self.DATA_CONFIG["dialog_template"] # 使用预设模板
+        self.tokenizer.pad_token = self.tokenizer.eos_token  # 用结束符作为填充符
 
     def tokenize(self, examples):
         """分词处理，构建训练文本"""
@@ -57,8 +58,8 @@ class Data_Tokenizer:
             truncation=True,  # 启用截断功能，确保不超过最大长度
             max_length=self.DATA_CONFIG["max_seq_length"],  # 指定分词之后的最大长度
             padding="max_length",  # 长度不够时将序列填充到最大长度
-            padding_side="right"
-            # return_tensors = "pt",  # 返回PyTorch张量
+            padding_side="right",
+            return_tensors = "pt",  # 返回PyTorch张量
             # add_special_tokens = True  # 确保添加[CLS]、[SEP]等
         )
 
