@@ -39,16 +39,14 @@ class ResponseGenerator:
             add_generation_prompt=True, # 在末尾添加助手标记
             return_tensors="pt", # 返回PyTorch张量
             truncation = True,  # 添加截断
-            max_length = 2048  # 控制输入长度
+            max_length = 512  # 控制输入长度
         ).to(self.model.device))
 
         outputs = self.model.generate(
-            inputs['input_ids'],  # 传入输入ID
+            input_ids=inputs["input_ids"],  # 传入输入ID
             attention_mask=inputs['attention_mask'],  # 传入attention mask
             generation_config=self.gen_config
         )
-
-
         print(outputs)
 
         return self.tokenizer.decode(
@@ -56,6 +54,7 @@ class ResponseGenerator:
             skip_special_tokens=True,  # 跳过特殊Token
             clean_up_tokenization_spaces = True  # 清理多余空格
         ).strip()  # 去除首尾空
+
 
     def chat_loop(self):
         """控制台多轮对话交互"""

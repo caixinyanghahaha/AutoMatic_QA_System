@@ -18,10 +18,14 @@ class ModelLoader:
         "lora_config": {
             "r": 2,
             "lora_alpha": 4,
-            "target_modules": ["q_proj", "v_proj"], # 增加 k_proj, o_proj（提升效果，但增加参数）
+            # q_proj: 生成查询向量, 用于计算与其他位置的关注度;
+            # v_proj: 生成键向量, 与Query计算相似度;
+            # k_proj: 生成值向量, 存储待提取的信息;
+            # o_proj: 将注意力结果映射回模型维度
+            "target_modules": ["q_proj", "v_proj"],
             "lora_dropout": 0.2,
             "bias": "lora_only",
-            "modules_to_save": [] # "lm_head", "embed_tokens"
+            "modules_to_save": [] # "lm_head": 生成词表的概率, "embed_tokens": 输入词向量，会大幅提高显存占用
         }
     }
 
