@@ -1,53 +1,66 @@
-from transformers import GenerationConfig, AutoModelForCausalLM
+from transformers import GenerationConfig, AutoModelForCausalLM, BitsAndBytesConfig
 import torch
+import json
+import time
+from pathlib import Path
+from tqdm import tqdm  # 进度条库
+
 
 class ResponseGenerator:
     """使用原生模型回复生成模块"""
 
     GEN_CONFIG = {
-        "max_new_tokens": 512, # 限制生成内容最多256个新Token
-        "temperature": 0.7, # 控制随机性（值越低输出越稳定）
-        "top_p": 0.9, # 核采样（只保留概率累计前90%的Token）
-        "top_k": 50,  # 新增top-k采样
-        "repetition_penalty": 1.2, # 惩罚重复内容（大于1时抑制重复）
-        "do_sample": True, # 启用采样
-        "num_beams": 1,  # 显式关闭束搜索
-        # "pad_token_id": 0,  # 显式指定填充token
-        # "eos_token_id": 2  # 显式指定结束token
+        "max_new_tokens": 128, # 限制生成内容最多256个新Token(太高生成冗余内容，太低过早截断)
+        "temperature": 0.3, # 控制随机性（值越低输出越稳定，值越高创意性越强）
+        "top_p": 0.7, # 核采样（只保留概率累计前90%的Token，低值更集中，高值更多样）
+        "top_k": 30,  # k采样，从前k个候选token采样，小k更保守（10-30），大k更开放（50-100）
+        "repetition_penalty": 1.5, # 惩罚重复内容，轻度1.0~1.2，严格1.5~2.0
+        "do_sample": True, # 启用采样策略，False: 贪婪解码（选准确性最高）
+        "num_beams": 1,  # 1：单束，3~5：质量高但速度慢
+        # "early_stopping": True  # 遇到合理结果提前停止
     }
 
     def __init__(self, model_name, tokenizer):
         # 加载模型
         self.tokenizer = tokenizer
+        if self.tokenizer.pad_token is None:
+            self.tokenizer.pad_token = self.tokenizer.eos_token  # 或用特定tok
         self.model = AutoModelForCausalLM.from_pretrained(
             model_name,
-            trust_remote_code=True,
-            torch_dtype=torch.bfloat16,
+            # quantization_config=BitsAndBytesConfig(**{
+            #     "load_in_4bit": True,
+            #     "bnb_4bit_compute_dtype": torch.float16
+            # }),
+            offload_folder="./offload",  # 指定存储卸载权重的文件夹
             device_map="auto",
-            offload_folder="./offload"  # 指定存储卸载权重的文件夹
+            torch_dtype=torch.float16,
+            trust_remote_code=True,
+            use_cache=True, # 生成时必须启用缓存
         )
-        self.gen_config = GenerationConfig(**self.GEN_CONFIG)
+        self.model.eval()  # 切换为评估模式
 
+        self.gen_config = GenerationConfig(**self.GEN_CONFIG)
 
     def generate(self, history):
         """生成教师回复"""
-        system_msg = {"role": "system", "content": "You are a mathematics tutoring assistant. Your role is to guide students through Socratic questioning."} # 系统固定提示
+        system_msg = {"role": "system", "content": "You are a mathematics tutoring assistant. Your job is to provide students with solutions to math problems."} # 系统固定提示
         full_conversation = [system_msg] + history
+        print(full_conversation)
         # 自动设备映射
         inputs = (self.tokenizer.apply_chat_template( # 将对话转化为模型所需格式
             full_conversation,
             add_generation_prompt=True, # 在末尾添加助手标记
             return_tensors="pt", # 返回PyTorch张量
-            truncation = True,  # 添加截断
-            max_length = 512  # 控制输入长度
+            # truncation = True,  # 添加截断
+            # max_length = 128,  # 控制输入长度
         ).to(self.model.device))
 
-        outputs = self.model.generate(
-            input_ids=inputs["input_ids"],  # 传入输入ID
-            attention_mask=inputs['attention_mask'],  # 传入attention mask
-            generation_config=self.gen_config
-        )
-        print(outputs)
+        with torch.no_grad():
+            outputs = self.model.generate(
+                input_ids=inputs,  # 直接传入二维张量
+                generation_config=self.gen_config,
+                attention_mask = torch.ones_like(inputs) # 手动创建全1掩码
+            )
 
         return self.tokenizer.decode(
             outputs[0][inputs.shape[1]:],  # 移除输入，只保留新生成的Token
@@ -92,3 +105,48 @@ class ResponseGenerator:
                 print(f"\n❌ 生成回复时发生错误: {str(e)}")
                 print("正在重置对话历史...")
                 history = []  # 重置对话以防错误累积
+
+
+    def zero_shot(self, test_file, output_dir):
+        """数据集批量生成回复"""
+        # 读取测试集
+        with open(test_file, "r", encoding="utf-8") as f:
+            test_data = json.load(f)  # 假设测试集是JSON列表格式
+
+        # 执行批量测试
+        results = []
+
+        for idx, question in enumerate(tqdm(test_data, desc="Processing")):
+            try:
+                start_time = time.time()
+
+                response = self.generate(question)
+
+                # 记录结果
+                results.append({
+                    "question": question,
+                    "answer": response,
+                    "processing_time": time.time() - start_time,
+                    "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
+                })
+
+            except Exception as e:
+                print(f"处理第 {idx + 1} 题时出错：{str(e)}")
+                results.append({
+                    "question": question,
+                    "error": str(e),
+                    "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
+                })
+
+        # 保存结果
+        """保存结果到JSON文件"""
+        # 创建结果目录
+        Path(output_dir).mkdir(parents=True, exist_ok=True)
+
+        timestamp = time.strftime("%Y%m%d-%H%M%S") # 生成时间戳字符串
+        output_path = f"{output_dir}/results_{timestamp}.json"
+
+        with open(output_path, "w", encoding="utf-8") as f:
+            json.dump(results, f, ensure_ascii=False, indent=2)
+
+        print(f"\n结果已保存至：{output_path}")

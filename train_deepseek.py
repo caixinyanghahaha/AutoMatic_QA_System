@@ -8,8 +8,6 @@ torch.backends.cudnn.benchmark = True         # 自动优化算法
 class MathTutorTrainer:
     """训练模块"""
     TRAIN_CONFIG = {
-        # 禁用所有保存功能
-        # "save_strategy": "epoch", # 保存策略（epoch：美伦每轮结束之后保存模型）
         "save_strategy": "no",  # 关闭保存策略
         "save_steps": None,  # 必须设为None
         "save_total_limit": None,  # 关闭检查点限制
@@ -67,9 +65,5 @@ class MathTutorTrainer:
         print("初始显存占用:", torch.cuda.memory_allocated() / 1024 ** 3, "GB")
         print(f"当前占用: {torch.cuda.memory_allocated() / 1024 ** 3:.2f} GB")
         trainer.train()
-
-        # 在您的 train() 方法返回 trainer 后添加,同时保存分词器
-        # trainer.save_model("./output/final_model")
-        # trainer.tokenizer.save_pretrained("./output/final_model/tokenizer")
 
         return trainer

@@ -13,6 +13,7 @@ from sklearn.cluster import KMeans
 from sklearn.feature_extraction.text import TfidfVectorizer
 from transformers import pipeline, AutoModelForSequenceClassification, AutoTokenizer
 import torch
+from sentence_transformers import SentenceTransformer
 from language_tool_python import LanguageTool
 # from convokit import Corpus, Conversation, ConversationParser
 from tqdm import tqdm
@@ -209,7 +210,6 @@ def information_ranking(data):
 
 def get_semantic_density(texts):
     """使用Sentence-BERT计算语义密度"""
-    from sentence_transformers import SentenceTransformer
     model = SentenceTransformer('all-mpnet-base-v2')
     embeddings = model.encode(texts)
     return np.linalg.norm(embeddings, axis=1)

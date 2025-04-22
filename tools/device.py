@@ -46,8 +46,8 @@ def load_model_safely(model_class, model_name, device):
 
 def download_model():
     snapshot_download(
-        repo_id="deepseek-ai/deepseek-math-7b-base",
-        local_dir="../local_models/deepseek-math-7b-base",
+        repo_id="deepseek-ai/deepseek-math-7b-instruct",
+        local_dir="../local_models/deepseek-math-7b-instruct",
         revision="main"
     )
 
