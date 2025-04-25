@@ -1,9 +1,5 @@
-import json
-import re
-from typing import List, Dict
-
 """
-此代码用于将数据集处理为deepSeek使用的对话对。
+此代码用于将数据集处理为deepSeek使用的对话对，包含生成训练数据集和测试数据集。
 格式为：
 [
     {
@@ -21,9 +17,10 @@ from typing import List, Dict
 ]
 """
 
-# 配置部分
-INPUT_FILE = "data/mrbench_v3_devset.json"  # 输入文件路径
-OUTPUT_FILE = "data/dialog_deepseek.json"  # 输出文件路径
+import json
+import re
+from typing import List, Dict
+
 
 def clean_text(text: str) -> str:
     """清洗文本，删除多余的空格和特殊字符，保持文本整洁。"""
@@ -118,14 +115,14 @@ def evaluate_response(item):
 
     return score
 
-# 主处理流程
-def main():
-    with open(INPUT_FILE, 'r', encoding='utf-8') as f:
-        raw_data = json.load(f)  # 假设输入格式为 [{"conversation_history": "..."}]
-    all_pairs = [] # 用于存储所有生成的对话对
+def train_data(input_file, output_file):
+    """将数据集处理为训练数据格式"""
+    with open(input_file, 'r', encoding='utf-8') as f:
+        raw_data = json.load(f)
+    all_pairs = []  # 用于存储所有生成的对话对
     for item in raw_data:
         # 选出不同模型中最好的回复并添加到对话历史中
-        best_responce = "hello! everyOne!!"
+        best_responce = ""
         score = -1
         for text in item["tutor_responses"]:
             responce_score = evaluate_response(item["tutor_responses"][text]["annotation"])
@@ -134,19 +131,48 @@ def main():
                 best_responce = item["tutor_responses"][text]["response"]
 
         responce = item["conversation_history"] + " \n Tutor:" + best_responce
-        # 将对话历史拆分为结构化的轮次
 
+        # 将对话历史拆分为结构化的轮次
         text = {
             "messages": split_conversation(responce)
         }
         all_pairs.append(text)
 
     # 保存结果
-    with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
+    with open(output_file, 'w', encoding='utf-8') as f:
         json.dump(all_pairs, f, ensure_ascii=False, indent=2)
 
     print(f"生成完成！共处理 {len(raw_data)} 个对话，得到 {len(all_pairs)} 个训练对。")
 
+def test_data(input_file, output_file):
+    with open(input_file, 'r', encoding='utf-8') as f:
+        raw_data = json.load(f)
+    all_pairs = []  # 用于存储所有生成的对话对
+    for item in raw_data:
+        responce = item["conversation_history"]
+        # 将对话历史拆分为结构化的轮次
+        text = {
+            "messages": split_conversation(responce)
+        }
+        all_pairs.append(text)
+
+    # 保存结果
+    with open(output_file, 'w', encoding='utf-8') as f:
+        json.dump(all_pairs, f, ensure_ascii=False, indent=2)
+
+    print(f"生成完成！共处理 {len(raw_data)} 个对话，得到 {len(all_pairs)} 个训练对。")
+
+# 主处理流程
+def main():
+    # 训练配置
+    train_file = "data/mrbench_v3_devset.json"
+    train_output = "data/train_deepseek.json"
+    # 测试配置
+    test_file = "data/mrbench_v3_testset.json"
+    test_output = "data/test_deepseek.json"
+
+    train_data(train_file, train_output)
+    test_data(test_file, test_output)
 
 if __name__ == "__main__":
     main()

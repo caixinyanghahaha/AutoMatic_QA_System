@@ -1,3 +1,6 @@
+from idlelib import history
+
+from peft import PeftConfig, PeftModel
 from transformers import GenerationConfig, AutoModelForCausalLM, BitsAndBytesConfig
 import torch
 import json
@@ -8,7 +11,6 @@ from tqdm import tqdm  # 进度条库
 
 class ResponseGenerator:
     """使用原生模型回复生成模块"""
-
     GEN_CONFIG = {
         "max_new_tokens": 128, # 限制生成内容最多256个新Token(太高生成冗余内容，太低过早截断)
         "temperature": 0.3, # 控制随机性（值越低输出越稳定，值越高创意性越强）
@@ -20,7 +22,7 @@ class ResponseGenerator:
         # "early_stopping": True  # 遇到合理结果提前停止
     }
 
-    def __init__(self, model_name, tokenizer):
+    def __init__(self, model_name, tokenizer, user_lora=False, adapter_path=""):
         # 加载模型
         self.tokenizer = tokenizer
         if self.tokenizer.pad_token is None:
@@ -37,29 +39,50 @@ class ResponseGenerator:
             trust_remote_code=True,
             use_cache=True, # 生成时必须启用缓存
         )
+
+        # 是否使用Lora适配器
+        if user_lora:
+            # 加载适配器配置
+            self.peft_config = PeftConfig.from_pretrained(adapter_path)
+            # 验证模型匹配性
+            if self.model.config.model_type != self.peft_config.base_model_name_or_path:
+                raise ValueError(  # 模型架构不匹配时报错
+                    f"基础模型类型不匹配！适配器训练于 {self.peft_config.base_model_name_or_path}，"
+                    f"当前加载的是 {self.model.config.model_type}"
+                )
+
+            # 合并适配器，将LoRA适配器加载到基础模型
+            self.model = PeftModel.from_pretrained(
+                self.model,
+                adapter_path,
+                device_map="auto"
+            )
+
         self.model.eval()  # 切换为评估模式
 
         self.gen_config = GenerationConfig(**self.GEN_CONFIG)
+
 
     def generate(self, history):
         """生成教师回复"""
         system_msg = {"role": "system", "content": "You are a mathematics tutoring assistant. Your job is to provide students with solutions to math problems."} # 系统固定提示
         full_conversation = [system_msg] + history
-        print(full_conversation)
         # 自动设备映射
         inputs = (self.tokenizer.apply_chat_template( # 将对话转化为模型所需格式
             full_conversation,
             add_generation_prompt=True, # 在末尾添加助手标记
             return_tensors="pt", # 返回PyTorch张量
-            # truncation = True,  # 添加截断
-            # max_length = 128,  # 控制输入长度
+            # 注入模板变量
+            system_prefix=self.tokenizer.DATA_CONFIG["system_prefix"],
+            eos_token=self.tokenizer.DATA_CONFIG["eos_token"],
+            thinking_prefix=self.tokenizer.DATA_CONFIG["thinking_prefix"]
         ).to(self.model.device))
 
-        with torch.no_grad():
+        with torch.inference_mode():
             outputs = self.model.generate(
                 input_ids=inputs,  # 直接传入二维张量
                 generation_config=self.gen_config,
-                attention_mask = torch.ones_like(inputs) # 手动创建全1掩码
+                attention_mask=(inputs != self.tokenizer.pad_token_id)  # 动态生成注意力掩码
             )
 
         return self.tokenizer.decode(
@@ -93,8 +116,12 @@ class ResponseGenerator:
                 response = self.generate(history)
                 print("\r", end="")  # 清除正在思考提示
 
-                # 显示并记录回复
-                print(f"🤖 助手: {response}\n")
+                # 显示并记录回复(带打字机效果）
+                print("\n🤖 助手：", end="")
+                for char in response:
+                    print(char, end="", flush=True)
+                    time.sleep(0.02)  # 调整打印速度
+                print()
                 history.append({"role": "assistant", "content": response})
 
             except KeyboardInterrupt:
@@ -115,16 +142,13 @@ class ResponseGenerator:
 
         # 执行批量测试
         results = []
-
         for idx, question in enumerate(tqdm(test_data, desc="Processing")):
             try:
                 start_time = time.time()
-
-                response = self.generate(question)
-
+                response = self.generate(question["messages"])
                 # 记录结果
                 results.append({
-                    "question": question,
+                    "question": question["messages"],
                     "answer": response,
                     "processing_time": time.time() - start_time,
                     "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
@@ -133,7 +157,7 @@ class ResponseGenerator:
             except Exception as e:
                 print(f"处理第 {idx + 1} 题时出错：{str(e)}")
                 results.append({
-                    "question": question,
+                    "question": question["messages"],
                     "error": str(e),
                     "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
                 })

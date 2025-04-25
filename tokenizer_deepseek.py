@@ -13,7 +13,7 @@ class Data_Tokenizer:
         "thinking_prefix": "Logical reasoning:", # 推理引导符，指示模型生成分步思考过程（训练时自动掩码，推理时触发逐步输出）
 
         "dialog_template": (
-            "<｜begin▁of▁sentence｜>System:\nYou are a mathematics tutoring assistant. Your job is to provide students with solutions to math problems.{{ eos_token }}"
+            "{{ system_prefix }}\nYou are a mathematics tutoring assistant. Your job is to provide students with solutions to math problems.{{ eos_token }}"
             "{% for message in messages %}"
                 "{% if message['role'] == 'user' %}"
                     "<｜begin▁of▁sentence｜>User:\n{{ message['content'] }}{{ eos_token }}"
@@ -23,22 +23,23 @@ class Data_Tokenizer:
             "{% endfor %}"
             
             "{% if add_generation_prompt %}"
-                "<｜begin▁of▁sentence｜>Assistant:\nLogical reasoning:"
+                "<｜begin▁of▁sentence｜>Assistant:\n{{ thinking_prefix }}"
             "{% endif %}"
         )
     }
 
     def __init__(self, tokenizer_name):
         self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_name, trust_remote_code=True)  # 从指定名称加载分词器
-
+        self.tokenizer.DATA_CONFIG = self.DATA_CONFIG  # 动态绑定配置
         # 添加特殊标记
         special_tokens = [
             self.DATA_CONFIG["system_prefix"],
-            self.DATA_CONFIG["thinking_prefix"]
+            self.DATA_CONFIG["thinking_prefix"],
         ]
         self.tokenizer.add_special_tokens({
             "additional_special_tokens": special_tokens
         })
+        # print("Special tokens:", self.tokenizer.special_tokens_map) # 验证特殊标记是否生效
 
         self.tokenizer.chat_template = self.DATA_CONFIG["dialog_template"] # 使用预设模板
         self.tokenizer.pad_token = self.tokenizer.eos_token  # 用结束符作为填充符
@@ -52,10 +53,13 @@ class Data_Tokenizer:
                 self.tokenizer.apply_chat_template(
                     messages,
                     tokenize=False,  # 不立即分词
-                    add_generation_prompt=True,  # 添加生成提示符
+                    add_generation_prompt=False,  # 添加生成提示符
+                    # 注入模板变量
+                    system_prefix=self.DATA_CONFIG["system_prefix"],
+                    eos_token=self.DATA_CONFIG["eos_token"],
+                    thinking_prefix=self.DATA_CONFIG["thinking_prefix"]
                 )
             )
-        print(formatted)
         tokenized = self.tokenizer(
             formatted,  # 格式化输入数据为适合训练的文本格式
             truncation=True,  # 启用截断功能，确保不超过最大长度

@@ -1,9 +1,7 @@
 import os
 import json
 
-from accelerate.test_utils.scripts.external_deps.test_ds_multiple_model import test_file_path
-
-os.environ['HF_HOME'] = 'D:/Program of code/JetBrains/PyCharm 2025.1/running-cache'
+# os.environ['HF_HOME'] = 'D:/Program of code/JetBrains/PyCharm 2025.1/running-cache'
 
 from tokenizer_deepseek import Data_Tokenizer
 from model_deepseek import ModelLoader
@@ -14,7 +12,7 @@ from datasets import Dataset
 def lora_train(model_name):
     """模型训练微调方法"""
     data_tokenizer = Data_Tokenizer(model_name)
-    with open("./data/dialog_deepseek.json", 'r', encoding='utf-8') as f:
+    with open("./data/train_deepseek.json", 'r', encoding='utf-8') as f:
         processed_data = json.load(f)
 
     # 转换为Dataset并分词
@@ -40,11 +38,17 @@ def lora_train(model_name):
         f.write(model_name)  # 记录基础模型版本
 
 
-def generate(model_name):
+def generate(model_name, lora=False):
     """使用模型生成对话"""
     data_tokenizer = Data_Tokenizer(model_name)
 
-    generator = ResponseGenerator(model_name, data_tokenizer.tokenizer)
+    if lora:
+        adapter_path = "./output/math_tutor_lora"  # 替换为实际适配器路径
+        generator = ResponseGenerator(model_name, data_tokenizer.tokenizer, True, adapter_path)
+    else:
+        generator = ResponseGenerator(model_name, data_tokenizer.tokenizer)
+
+
     test_history = [{
         "role": "user",
         "content": "Solve the equation: 2x + 5 = 15, find the value of x."
@@ -56,7 +60,7 @@ def generate(model_name):
 
 def zero_shot(model_name):
     """调用原模型批量生成回复"""
-    test_file = "./data/dialog_deepseek.json"
+    test_file = "./data/test_deepseek.json"
     output_dir = "./output/zero_shot_result/"
 
     data_tokenizer = Data_Tokenizer(model_name)
@@ -66,14 +70,7 @@ def zero_shot(model_name):
 
 
 if __name__ == "__main__":
-    model_name = "./local_models/deepseek-math-7b-instruct"
-    generate(model_name)
+    # model_name = "./local_models/deepseek-math-7b-instruct" # 本地调用
+    model_name = "deepseek-ai/deepseek-math-7b-instruct" # 远程链接
 
-    # data_tokenizer = Data_Tokenizer(model_name)
-    # with open("./data/dialog_deepseek.json", 'r', encoding='utf-8') as f:
-    #     processed_data = json.load(f)
-    #
-    # # 转换为Dataset并分词
-    # dataset = Dataset.from_dict({"messages": processed_data})
-    # train_dataset = dataset.map(data_tokenizer.tokenize, batched=True,
-    #                             remove_columns=["messages"], num_proc=2)
+    # generate(model_name)
