@@ -1,16 +1,15 @@
-
 import tkinter as tk
 from tkinter import scrolledtext, messagebox, simpledialog
 import threading
 
 
 class ResponseGeneratorGUI:
-    def __init__(self, master):
+    def __init__(self, master, generator):
         self.master = master
         self.history = []
         self.setup_ui()
-        self.model = None  # 初始化模型的地方
         self.generating = False  # 用于防止重复点击
+        self.generator = generator
 
     def setup_ui(self):
         """设置界面元素"""
@@ -92,8 +91,7 @@ class ResponseGeneratorGUI:
     def generate_response(self):
         """生成回复的线程方法"""
         try:
-            # 这里替换实际的模型生成代码
-            # response = self.model.generate(...)
+            self.generator.generate(self.history)
             response = "这是模拟回复\n换行测试"  # 示例回复
 
             # 在主线程更新UI

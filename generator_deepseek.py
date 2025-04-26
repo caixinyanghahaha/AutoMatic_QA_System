@@ -59,7 +59,6 @@ class ResponseGenerator:
             )
 
         self.model.eval()  # 切换为评估模式
-
         self.gen_config = GenerationConfig(**self.GEN_CONFIG)
 
 
