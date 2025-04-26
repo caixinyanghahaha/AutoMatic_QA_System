@@ -44,13 +44,11 @@ def lora_train(model_name):
 def generate(model_name, lora=False):
     """使用模型生成对话"""
     data_tokenizer = Data_Tokenizer(model_name)
-
     if lora:
         adapter_path = "./output/math_tutor_lora"  # 替换为实际适配器路径
         generator = ResponseGenerator(model_name, data_tokenizer.tokenizer, True, adapter_path)
     else:
         generator = ResponseGenerator(model_name, data_tokenizer.tokenizer)
-
 
     test_history = [{
         "role": "user",
@@ -83,7 +81,6 @@ def use_GUI(model_name, lora=False):
     root = tk.Tk()
     app = ResponseGeneratorGUI(root, generator)
     root.mainloop()
-
 
 if __name__ == "__main__":
     # model_name = "./local_models/deepseek-math-7b-instruct" # 本地调用
