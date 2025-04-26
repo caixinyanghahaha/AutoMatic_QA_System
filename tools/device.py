@@ -21,11 +21,12 @@ def test_device():
 def get_device():
     if torch.backends.mps.is_available():
         torch.mps.empty_cache()
-        return "mps"
+        print("mps")
     elif torch.cuda.is_available():
         torch.cuda.empty_cache()
-        return "cuda"
-    return "cpu"
+        print("cuda")
+    else:
+        print("cpu")
 
 def clean_memory():
     """清理GPU/MPS内存"""
@@ -52,4 +53,4 @@ def download_model():
     )
 
 if __name__ == "__main__":
-    download_model()
+    get_device()
