@@ -61,7 +61,6 @@ class ResponseGenerator:
         self.model.eval()  # 切换为评估模式
         self.gen_config = GenerationConfig(**self.GEN_CONFIG)
 
-
     def generate(self, history):
         """生成教师回复"""
         system_msg = {"role": "system", "content": "You are a mathematics tutoring assistant. Your job is to provide students with solutions to math problems."} # 系统固定提示
@@ -89,7 +88,6 @@ class ResponseGenerator:
             skip_special_tokens=True,  # 跳过特殊Token
             clean_up_tokenization_spaces = True  # 清理多余空格
         ).strip()  # 去除首尾空
-
 
     def chat_loop(self):
         """控制台多轮对话交互"""
@@ -131,7 +129,6 @@ class ResponseGenerator:
                 print(f"\n❌ 生成回复时发生错误: {str(e)}")
                 print("正在重置对话历史...")
                 history = []  # 重置对话以防错误累积
-
 
     def zero_shot(self, test_file, output_dir):
         """数据集批量生成回复"""

@@ -64,7 +64,9 @@ class ResponseGeneratorGUI:
         """将当前对话内容输入到历史记录"""
         self.history_text.configure(state='normal') # 修改文本区域的状态以允许编辑
         prefix = "👤 用户: " if role == "user" else "🤖 助手: "
-        self.history_text.insert(tk.END, prefix + content + "\n\n") # 向文本区域添加新行
+        full_text = prefix + content + "\n\n"
+
+        self.history_text.insert(tk.END, full_text) # 向文本区域添加新行
         self.history_text.see(tk.END)  # 自动滚动到底部
         self.history_text.configure(state='disabled') # 修改文本区域的状态禁用编辑
 
