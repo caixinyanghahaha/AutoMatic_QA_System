@@ -84,3 +84,4 @@ if __name__ == "__main__":
     # model_name = "./local_models/deepseek-math-7b-instruct" # 本地调用
     model_name = "deepseek-ai/deepseek-math-7b-instruct" # 远程链接
     # generate(model_name)
+    generate(model_name, False)
