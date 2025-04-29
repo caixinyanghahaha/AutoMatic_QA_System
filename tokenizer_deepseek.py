@@ -1,6 +1,8 @@
 import json
 from torch.fx.experimental.unification.unification_tools import merge_with
 from transformers import AutoTokenizer
+from datasets import Dataset
+
 
 class Data_Tokenizer:
     """数据预处理模块（内置参数配置）"""
@@ -32,16 +34,16 @@ class Data_Tokenizer:
         self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_name, trust_remote_code=True)  # 从指定名称加载分词器
         self.tokenizer.DATA_CONFIG = self.DATA_CONFIG  # 动态绑定配置
         # 添加特殊标记
-        special_tokens = [
-            self.DATA_CONFIG["system_prefix"],
-            self.DATA_CONFIG["thinking_prefix"],
-        ]
-        self.tokenizer.add_special_tokens({
-            "additional_special_tokens": special_tokens
-        })
+        # special_tokens = [
+        #     self.DATA_CONFIG["system_prefix"],
+        #     self.DATA_CONFIG["thinking_prefix"],
+        # ]
+        # self.tokenizer.add_special_tokens({
+        #     "additional_special_tokens": special_tokens
+        # })
         # print("Special tokens:", self.tokenizer.special_tokens_map) # 验证特殊标记是否生效
 
-        self.tokenizer.chat_template = self.DATA_CONFIG["dialog_template"] # 使用预设模板
+        # self.tokenizer.chat_template = self.DATA_CONFIG["dialog_template"] # 使用预设模板
         self.tokenizer.pad_token = self.tokenizer.eos_token  # 用结束符作为填充符
 
     def tokenize(self, examples):
@@ -55,11 +57,14 @@ class Data_Tokenizer:
                     tokenize=False,  # 不立即分词
                     add_generation_prompt=False,  # 添加生成提示符
                     # 注入模板变量
-                    system_prefix=self.DATA_CONFIG["system_prefix"],
-                    eos_token=self.DATA_CONFIG["eos_token"],
-                    thinking_prefix=self.DATA_CONFIG["thinking_prefix"]
+                    # system_prefix=self.DATA_CONFIG["system_prefix"],
+                    # eos_token=self.DATA_CONFIG["eos_token"],
+                    # thinking_prefix=self.DATA_CONFIG["thinking_prefix"]
                 )
             )
+
+        print(formatted)
+
         tokenized = self.tokenizer(
             formatted,  # 格式化输入数据为适合训练的文本格式
             truncation=True,  # 启用截断功能，确保不超过最大长度
@@ -77,3 +82,14 @@ class Data_Tokenizer:
         ]
 
         return tokenized
+
+if __name__ == '__main__':
+    """模型训练微调方法"""
+    data_tokenizer = Data_Tokenizer("deepseek-ai/deepseek-math-7b-instruct")
+    with open("./data/train_deepseek.json", 'r', encoding='utf-8') as f:
+        processed_data = json.load(f)
+
+    # 转换为Dataset并分词
+    dataset = Dataset.from_dict({"messages": processed_data})
+    train_dataset = dataset.map(data_tokenizer.tokenize, batched=True,
+                                remove_columns=["messages"], num_proc=2)

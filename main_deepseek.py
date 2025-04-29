@@ -1,6 +1,5 @@
 import os
 import json
-
 # os.environ['HF_HOME'] = 'D:/Program of code/JetBrains/PyCharm 2025.1/running-cache'
 
 from tokenizer_deepseek import Data_Tokenizer
@@ -39,7 +38,6 @@ def lora_train(model_name):
     )
     with open("./output/math_tutor_lora/base_model.txt", "w") as f:
         f.write(model_name)  # 记录基础模型版本
-
 
 def generate(model_name, lora=False):
     """使用模型生成对话"""

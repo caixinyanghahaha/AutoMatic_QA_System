@@ -71,9 +71,9 @@ class ResponseGenerator:
             add_generation_prompt=True, # 在末尾添加助手标记
             return_tensors="pt", # 返回PyTorch张量
             # 注入模板变量
-            system_prefix=self.tokenizer.DATA_CONFIG["system_prefix"],
-            eos_token=self.tokenizer.DATA_CONFIG["eos_token"],
-            thinking_prefix=self.tokenizer.DATA_CONFIG["thinking_prefix"]
+            # system_prefix=self.tokenizer.DATA_CONFIG["system_prefix"],
+            # eos_token=self.tokenizer.DATA_CONFIG["eos_token"],
+            # thinking_prefix=self.tokenizer.DATA_CONFIG["thinking_prefix"]
         ).to(self.model.device))
 
         with torch.inference_mode():
