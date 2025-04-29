@@ -26,7 +26,7 @@ class DialogueFilter:
         "output_path": "selected_top20.json",  # 输出路径
         "target_size": 20,  # 最终保存的对话数量
         "min_turns": 3,  # 过滤少于三轮对话
-        "min_length": 15,  # 每轮最少词数
+        "min_length": 10,  # 每轮最少词数
         "grammar_error_threshold": 0.1,  # 每个词最多0.1个语法错误
         "intent_labels": ["request", "complaint", "query", "social", "instruction"],  # 意图分类标签（request：服务请求；complaint：投诉；query：信息查询；social：社交对话；instruction：操作指导）
         "device": "mps",
@@ -84,7 +84,6 @@ class DialogueFilter:
         # print("\n预处理后文本示例：")
         # for i, text in enumerate(sample_texts):
         #     print(f"{i + 1}. {text}")
-
         return filtered
 
     def diversity_sampling(self,filtered_data):
@@ -109,6 +108,8 @@ class DialogueFilter:
                 candidate_labels=self.FILTER_CONFIG["intent_labels"] # 指定候选标签集
             )
             intents.append(result['labels'][0]) # 选择置信度最高的标签插入
+
+        print(intents)
 
         # 分层抽样保证意图分布，使得20个样本的分布与原始数据相同
         sss = StratifiedShuffleSplit( # 创建分层随机抽样对象
@@ -138,8 +139,8 @@ class DialogueFilter:
             best_k = 2
             best_score = -1
             for k in range(2, max_k + 1):
-                if k >= len(stratified_selected):
-                    continue
+                # if k >= len(stratified_selected):
+                #     continue
 
                 kmeans = KMeans(n_clusters=k, random_state=42)
                 clusters = kmeans.fit_predict(features)
@@ -151,13 +152,13 @@ class DialogueFilter:
                 if score > best_score:
                     best_score = score
                     best_k = k
-            return best_k if best_score > 0.5 else 1  # 阈值可调整
+            return best_k if best_score > 0.3 else 1  # 阈值可调整
 
         # 聚类
         optimal_k = find_optimal_k(scaled_features)
-        print(optimal_k)
         kmeans = KMeans(n_clusters=optimal_k, random_state=42)
         clusters = kmeans.fit_predict(scaled_features) # 返回每个样本的簇标签
+
         print(clusters)
 
         # 优化样本选择：选择最接近质心的样本
@@ -227,6 +228,7 @@ class DialogueFilter:
                 0.3 * semantic_scores +
                 0.3 * uncertainty_scores
         )
+
         return [data[i] for i in np.argsort(combined)[-self.FILTER_CONFIG["target_size"]:]]
 
     def filter(self):
@@ -235,17 +237,21 @@ class DialogueFilter:
         print(f"预处理后剩余对话：{len(cleaned)}条")
 
         # 阶段2：多样性采样
-        diverse = self.diversity_sampling(cleaned)
-        print("多样性采样完成")
+        # diverse = self.diversity_sampling(cleaned)
+        # print("多样性采样完成")
 
         # 阶段3：信息量评估
-        ranked = self.information_ranking(diverse)
+        ranked = self.information_ranking(cleaned)
         print("信息量评估完成")
 
         # 输出Top候选
         print("\n推荐的候选对话：")
         for i, dialog in enumerate(ranked[:20]):
             print(f"{i + 1}.话轮数:{len(dialog['messages'])}")
+
+        # 保存结果
+        with open("data/filter_deepseek.json", 'w', encoding='utf-8') as f:
+            json.dump(ranked[:20], f, ensure_ascii=False, indent=2)
 
 if __name__ == '__main__':
     test = DialogueFilter("data/train_deepseek.json")
