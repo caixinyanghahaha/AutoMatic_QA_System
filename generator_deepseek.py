@@ -1,5 +1,3 @@
-from idlelib import history
-
 from peft import PeftConfig, PeftModel
 from transformers import GenerationConfig, AutoModelForCausalLM, BitsAndBytesConfig
 import torch
@@ -12,7 +10,7 @@ from tqdm import tqdm  # 进度条库
 class ResponseGenerator:
     """使用原生模型回复生成模块"""
     GEN_CONFIG = {
-        "max_new_tokens": 128, # 限制生成内容最多256个新Token(太高生成冗余内容，太低过早截断)
+        "max_new_tokens": 256, # 限制生成内容最多256个新Token(太高生成冗余内容，太低过早截断)
         "temperature": 0.3, # 控制随机性（值越低输出越稳定，值越高创意性越强）
         "top_p": 0.7, # 核采样（只保留概率累计前90%的Token，低值更集中，高值更多样）
         "top_k": 30,  # k采样，从前k个候选token采样，小k更保守（10-30），大k更开放（50-100）

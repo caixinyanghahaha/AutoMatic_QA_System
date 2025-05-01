@@ -16,13 +16,13 @@ class ModelLoader:
             "bnb_4bit_compute_dtype": torch.float16,
         },
         "lora_config": {
-            "r": 2,
-            "lora_alpha": 4,
+            "r": 8,
+            "lora_alpha": 32,
             # q_proj: 生成查询向量, 用于计算与其他位置的关注度;
             # v_proj: 生成键向量, 与Query计算相似度;
             # k_proj: 生成值向量, 存储待提取的信息;
             # o_proj: 将注意力结果映射回模型维度
-            "target_modules": ["q_proj", "v_proj"],
+            "target_modules": ["q_proj", "v_proj", "k_proj"],
             "lora_dropout": 0.2,
             "bias": "lora_only",
             "modules_to_save": [] # "lm_head": 生成词表的概率, "embed_tokens": 输入词向量，会大幅提高显存占用
@@ -37,10 +37,10 @@ class ModelLoader:
         # 3. 加载模型
         model = AutoModelForCausalLM.from_pretrained(
             self.MODEL_CONFIG["model_name"],
-            local_files_only=True,  # 强制本地加载
+            # local_files_only=True,  # 强制本地加载
             quantization_config=self.MODEL_CONFIG["quant_config"],
             device_map="auto",
-            torch_dtype=torch.float16,
+            torch_dtype=torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16,
             trust_remote_code=True
         )
 

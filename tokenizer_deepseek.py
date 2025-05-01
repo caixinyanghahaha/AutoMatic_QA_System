@@ -9,7 +9,7 @@ class Data_Tokenizer:
 
     # 数据相关配置
     DATA_CONFIG = {
-        "max_seq_length": 128,  # 适配DeepSeek的长上下文能力
+        "max_seq_length": 256,  # 适配DeepSeek的长上下文能力
         "system_prefix": "<｜begin▁of▁sentence｜>System:", # 系统指令前缀，用于标记来自系统的初始化提示
         "eos_token": "<｜end▁of▁sentence｜>", # 结束标记
         "thinking_prefix": "Logical reasoning:", # 推理引导符，指示模型生成分步思考过程（训练时自动掩码，推理时触发逐步输出）
@@ -62,8 +62,6 @@ class Data_Tokenizer:
                     # thinking_prefix=self.DATA_CONFIG["thinking_prefix"]
                 )
             )
-
-        print(formatted)
 
         tokenized = self.tokenizer(
             formatted,  # 格式化输入数据为适合训练的文本格式

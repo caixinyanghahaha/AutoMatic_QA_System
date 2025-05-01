@@ -56,7 +56,7 @@ class ResponseGeneratorGUI:
         status_bar.pack(side=tk.BOTTOM, fill=tk.X)
 
         # 初始化显示
-        self.status_var.set(f"状态: {"准备就绪"}")
+        self.status_var.set(f"状态: 准备就绪")
         welcome_msg = "=== 数学辅导对话系统 ===\n输入您的问题或想法（清空输入或关闭窗口退出）\n"
         self.append_to_history("system", welcome_msg)
 
@@ -82,7 +82,7 @@ class ResponseGeneratorGUI:
         self.history.append({"role": "user", "content": user_input}) # 将对话插入到历史中
 
         # 启动生成线程
-        self.status_var.set(f"状态: {"正在思考..."}")
+        self.status_var.set(f"状态: 正在思考...")
         self.generating = True
         threading.Thread(target=self.generate_response, daemon=True).start() # 启动新线程生成响应
 
@@ -96,7 +96,7 @@ class ResponseGeneratorGUI:
         except Exception as e:
             self.master.after(0, lambda: self.show_error(str(e))) # 使用 after 方法在主线程中调用 show_error 方法
         finally:
-            self.master.after(0, lambda: self.status_var.set(f"状态: {"准备就绪"}"))
+            self.master.after(0, lambda: self.status_var.set(f"状态: 准备就绪"))
             self.generating = False
 
     def show_error(self, error_msg):
@@ -107,7 +107,7 @@ class ResponseGeneratorGUI:
         self.history_text.delete(1.0, tk.END) # 清空文本区域
         self.history_text.configure(state='disabled')
 
-        self.status_var.set(f"状态: {"准备就绪"}")
+        self.status_var.set(f"状态: 准备就绪")
         self.append_to_history("system", "=== 数学辅导对话系统 ===\n输入您的问题或想法（清空输入或关闭窗口退出）\n")
 
 if __name__ == "__main__":

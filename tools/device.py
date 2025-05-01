@@ -1,6 +1,8 @@
+import os
 import torch
 from accelerate import init_empty_weights
 from huggingface_hub import snapshot_download
+from bitsandbytes import __version__ as bnb_version
 
 
 def test_device():
@@ -11,6 +13,9 @@ def test_device():
     print(f"Current GPU: {torch.cuda.current_device()}")
     print(f"GPU name: {torch.cuda.get_device_name(0)}")
     print(f"cuDNN enabled: {torch.backends.cudnn.enabled}")
+    print(f"cpu count: {os.cpu_count()}")
+    print(f"PyTorch CUDA: {torch.version.cuda}")
+    print(f"bitsandbytes版本: {bnb_version}")
 
     # 创建一个张量并移动到GPU
     x = torch.rand(5, 3)

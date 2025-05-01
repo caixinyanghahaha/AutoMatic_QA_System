@@ -6,9 +6,9 @@ from tokenizer_deepseek import Data_Tokenizer
 from model_deepseek import ModelLoader
 from train_deepseek import MathTutorTrainer
 from generator_deepseek import ResponseGenerator
-from GUI_deepseek import ResponseGeneratorGUI
+# from GUI_deepseek import ResponseGeneratorGUI
 from datasets import Dataset
-import tkinter as tk
+# import tkinter as tk
 
 
 def lora_train(model_name):
@@ -50,7 +50,7 @@ def generate(model_name, lora=False):
 
     test_history = [{
         "role": "user",
-        "content": "Solve the equation: 2x + 5 = 15, find the value of x."
+        "content": "what is the integral of x^2 from 0 to 2?\nPlease reason step by step, and put your final answer within \boxed{}."
     }]
     print(generator.generate(test_history))
 
@@ -67,21 +67,22 @@ def zero_shot(model_name):
     generator = ResponseGenerator(model_name, data_tokenizer.tokenizer)
     generator.zero_shot(test_file, output_dir)
 
-def use_GUI(model_name, lora=False):
-    """使用GUI交互见面进行问答"""
-    data_tokenizer = Data_Tokenizer(model_name)
-    if lora:
-        adapter_path = "./output/math_tutor_lora"  # 替换为实际适配器路径
-        generator = ResponseGenerator(model_name, data_tokenizer.tokenizer, True, adapter_path)
-    else:
-        generator = ResponseGenerator(model_name, data_tokenizer.tokenizer)
-
-    root = tk.Tk()
-    app = ResponseGeneratorGUI(root, generator)
-    root.mainloop()
+# def use_GUI(model_name, lora=False):
+#     """使用GUI交互见面进行问答"""
+#     data_tokenizer = Data_Tokenizer(model_name)
+#     if lora:
+#         adapter_path = "./output/math_tutor_lora"  # 替换为实际适配器路径
+#         generator = ResponseGenerator(model_name, data_tokenizer.tokenizer, True, adapter_path)
+#     else:
+#         generator = ResponseGenerator(model_name, data_tokenizer.tokenizer)
+#
+#     root = tk.Tk()
+#     app = ResponseGeneratorGUI(root, generator)
+#     root.mainloop()
 
 if __name__ == "__main__":
     # model_name = "./local_models/deepseek-math-7b-instruct" # 本地调用
     model_name = "deepseek-ai/deepseek-math-7b-instruct" # 远程链接
     # generate(model_name)
-    generate(model_name, False)
+    # zero_shot(model_name)
+    lora_train(model_name)
