@@ -20,7 +20,6 @@ class MathTutorTrainer:
         "learning_rate": 3e-5, # 学习率
         "logging_steps": 50, # 每50步记录一次训练日志
         "fp16": True,  # 使用更高效的混合精度控制
-        # "bf16": torch.cuda.is_bf16_supported(),
         "optim": "adamw_torch_fused", # 使用融合优化器提速
         "dataloader_num_workers": 4,  # 提升数据加载并行度
         "dataloader_pin_memory": True,  # 锁页内存加速传输

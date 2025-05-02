@@ -33,15 +33,6 @@ class Data_Tokenizer:
     def __init__(self, tokenizer_name):
         self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_name, trust_remote_code=True)  # 从指定名称加载分词器
         self.tokenizer.DATA_CONFIG = self.DATA_CONFIG  # 动态绑定配置
-        # 添加特殊标记
-        # special_tokens = [
-        #     self.DATA_CONFIG["system_prefix"],
-        #     self.DATA_CONFIG["thinking_prefix"],
-        # ]
-        # self.tokenizer.add_special_tokens({
-        #     "additional_special_tokens": special_tokens
-        # })
-        # print("Special tokens:", self.tokenizer.special_tokens_map) # 验证特殊标记是否生效
 
         # self.tokenizer.chat_template = self.DATA_CONFIG["dialog_template"] # 使用预设模板
         self.tokenizer.pad_token = self.tokenizer.eos_token  # 用结束符作为填充符
@@ -56,10 +47,6 @@ class Data_Tokenizer:
                     messages,
                     tokenize=False,  # 不立即分词
                     add_generation_prompt=False,  # 添加生成提示符
-                    # 注入模板变量
-                    # system_prefix=self.DATA_CONFIG["system_prefix"],
-                    # eos_token=self.DATA_CONFIG["eos_token"],
-                    # thinking_prefix=self.DATA_CONFIG["thinking_prefix"]
                 )
             )
 

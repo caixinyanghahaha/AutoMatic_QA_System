@@ -27,10 +27,6 @@ class ResponseGenerator:
             self.tokenizer.pad_token = self.tokenizer.eos_token  # 或用特定tok
         self.model = AutoModelForCausalLM.from_pretrained(
             model_name,
-            # quantization_config=BitsAndBytesConfig(**{
-            #     "load_in_4bit": True,
-            #     "bnb_4bit_compute_dtype": torch.float16
-            # }),
             offload_folder="./offload",  # 指定存储卸载权重的文件夹
             device_map="auto",
             torch_dtype=torch.float16,
@@ -68,10 +64,6 @@ class ResponseGenerator:
             full_conversation,
             add_generation_prompt=True, # 在末尾添加助手标记
             return_tensors="pt", # 返回PyTorch张量
-            # 注入模板变量
-            # system_prefix=self.tokenizer.DATA_CONFIG["system_prefix"],
-            # eos_token=self.tokenizer.DATA_CONFIG["eos_token"],
-            # thinking_prefix=self.tokenizer.DATA_CONFIG["thinking_prefix"]
         ).to(self.model.device))
 
         with torch.inference_mode():

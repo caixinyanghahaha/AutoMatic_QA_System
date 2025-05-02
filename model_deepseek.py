@@ -53,8 +53,9 @@ class ModelLoader:
 
         # 训练优化设置
         model.enable_input_require_grads() # 确保输入张量的 requires_grad 属性正确传递
-        # 启用梯度检查点
-        # model.gradient_checkpointing_enable() # 用时间换显存，不保存全部中间激活值，反向传播时重新计算部分结果, 减少显存占用(约30-40%,速度降低20%)。
+
+        # 启用梯度检查点，用时间换显存，不保存全部中间激活值，反向传播时重新计算部分结果, 减少显存占用(约30-40%,速度降低20%)。
+        # model.gradient_checkpointing_enable()
 
         model.config.use_cache = False  # 训练时禁用缓存
 
