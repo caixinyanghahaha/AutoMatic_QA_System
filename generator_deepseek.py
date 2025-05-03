@@ -37,7 +37,6 @@ class ResponseGenerator:
         if user_lora:
             # 加载适配器配置
             self.peft_config = PeftConfig.from_pretrained(adapter_path)
-
             # 合并适配器，将LoRA适配器加载到基础模型
             self.model = PeftModel.from_pretrained(
                 self.model,

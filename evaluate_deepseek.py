@@ -2,6 +2,7 @@ import numpy as np
 from nltk.translate.bleu_score import sentence_bleu
 from transformers import pipeline, AutoModelForSequenceClassification, AutoTokenizer
 import language_tool_python
+from typing import List, Optional
 
 
 class ResponseEvaluator:
@@ -20,8 +21,15 @@ class ResponseEvaluator:
         self.fluency_model = AutoModelForSequenceClassification.from_pretrained("prithivida/grammar_error_correcter_v1")
         self.fluency_tokenizer = AutoTokenizer.from_pretrained("prithivida/grammar_error_correcter_v1")
 
+        # 多轮对话组件
+        self.nli_model = pipeline(
+            "text-classification",
+            model="roberta-large-mnli",
+            return_all_scores=True
+        )
 
-    def evaluate_response(self, prompt, response, reference=None):
+
+    def evaluate_response(self, prompt, response, reference=None, context: List[str] = None):
         """
         综合评估回复质量
         :param prompt: 原始提示/问题
@@ -50,12 +58,38 @@ class ResponseEvaluator:
         # 与问题的相关性，输出 0-1 的相似度分数（1表示完全相关）
         scores['relevance'] = float(self.similarity_model(f"{prompt} [SEP] {response}")[0]['score']) # 输入格式：问题 [SEP] 回复（[SEP] 是预定义的分隔符）
 
+        # 增强相关性评估（考虑上下文）
+        scores['relevance'] = self._enhanced_relevance(prompt, response, context)
+
+        # 新增一致性检查
+        scores['consistency'] = self._check_consistency(context, response) if context else 1.0
+
         # 与参考回复的相似度（如果有）
         if reference:
             scores['bleu'] = sentence_bleu([reference.split()], response.split()) # 比较生成回复与参考回复的 n-gram 重叠率
             scores['reference_similarity'] = float(self.similarity_model(f"{reference} [SEP] {response}")[0]['score']) # 输出 0-1 的相似度分数（1表示完全相关）
 
         return scores
+
+    # 多轮评估方法
+    def _enhanced_relevance(self, prompt: str, response: str, context: List[str]) -> float:
+        """考虑上下文的相关性评估"""
+        # 组合最近3轮上下文
+        weighted_context = " ".join([
+            f"[{i + 1}] {text}"
+            for i, text in enumerate(context[-3:])
+        ])
+        return 0.7 * float(self.similarity_model(f"{prompt} [SEP] {response}")[0]['score']) + \
+            0.3 * float(self.similarity_model(f"{weighted_context} [SEP] {response}")[0]['score'])
+
+    def _check_consistency(self, context: List[str], response: str) -> float:
+        """与历史信息一致性检查"""
+        scores = []
+        for hist in context[-2:]:  # 检查最近两轮
+            result = self.nli_model(f"{hist} [SEP] {response}", top_k=None)
+            contradiction = next((s['score'] for s in result[0] if s['label'] == 'CONTRADICTION'), 0.0)
+            scores.append(1 - contradiction)
+        return np.mean(scores) if scores else 1.0
 
 # 使用示例
 if __name__ == "__main__":

@@ -43,7 +43,7 @@ def generate(model_name, lora=False):
     """使用模型生成对话"""
     data_tokenizer = Data_Tokenizer(model_name)
     if lora:
-        adapter_path = "output/first/output/math_tutor_lora"  # 替换为实际适配器路径
+        adapter_path = "output/math_tutor_lora/math_tutor_lora"  # 替换为实际适配器路径
         generator = ResponseGenerator(model_name, data_tokenizer.tokenizer, True, adapter_path)
     else:
         generator = ResponseGenerator(model_name, data_tokenizer.tokenizer)
@@ -53,7 +53,7 @@ def file_response(model_name, test_file, output_dir, lora=False):
     """调用原模型批量生成回复"""
     data_tokenizer = Data_Tokenizer(model_name)
     if lora:
-        adapter_path = "output/second/output/math_tutor_lora_filter_data"  # 替换为实际适配器路径
+        adapter_path = "output/math_tutor_lora_filter_data/math_tutor_lora_filter_data"  # 替换为实际适配器路径
         generator = ResponseGenerator(model_name, data_tokenizer.tokenizer, True, adapter_path)
     else:
         generator = ResponseGenerator(model_name, data_tokenizer.tokenizer)
