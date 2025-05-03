@@ -3,38 +3,10 @@
   <component name="PublishConfigData" autoUpload="Always" remoteFilesAllowedToDisappearOnAutoupload="false" confirmBeforeUploading="false">
     <option name="confirmBeforeUploading" value="false" />
     <serverData>
-      <paths name="ubuntu@101.33.124.40:22 key">
+      <paths name="ubuntu@129.226.186.99:22 key">
         <serverdata>
           <mappings>
-            <mapping deploy="/tmp/pycharm_project_162" local="$PROJECT_DIR$" />
-          </mappings>
-        </serverdata>
-      </paths>
-      <paths name="ubuntu@150.109.39.135:22 key">
-        <serverdata>
-          <mappings>
-            <mapping deploy="/tmp/pycharm_project_984" local="$PROJECT_DIR$" />
-          </mappings>
-        </serverdata>
-      </paths>
-      <paths name="ubuntu@150.109.39.135:22 key (2)">
-        <serverdata>
-          <mappings>
-            <mapping deploy="/tmp/pycharm_project_449" local="$PROJECT_DIR$" />
-          </mappings>
-        </serverdata>
-      </paths>
-      <paths name="ubuntu@150.109.39.135:22 key (3)">
-        <serverdata>
-          <mappings>
-            <mapping deploy="/tmp/pycharm_project_337" local="$PROJECT_DIR$" />
-          </mappings>
-        </serverdata>
-      </paths>
-      <paths name="ubuntu@43.154.71.83:22 key">
-        <serverdata>
-          <mappings>
-            <mapping deploy="/tmp/pycharm_project_667" local="$PROJECT_DIR$" />
+            <mapping deploy="/tmp/pycharm_project_310" local="$PROJECT_DIR$" />
           </mappings>
         </serverdata>
       </paths>

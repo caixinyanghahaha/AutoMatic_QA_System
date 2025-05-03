@@ -70,8 +70,8 @@ class MathTutorTrainer:
                 mlm=False,  # 禁用遮蔽语言模型（MLM）
                 pad_to_multiple_of=32,  # 根据精度调整，对齐显存访问
                 return_tensors="pt",
-            )  # 获取数据整理器
-            # eval_dataset=self.dataset.select(range(100))  # 示例验证集
+            ),  # 获取数据整理器
+            # eval_dataset=self.dataset.select(range(30))  # 示例验证集
         )
 
         # 显存占用分析

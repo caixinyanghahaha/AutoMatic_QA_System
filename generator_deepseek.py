@@ -10,21 +10,20 @@ from tqdm import tqdm  # 进度条库
 class ResponseGenerator:
     """使用原生模型回复生成模块"""
     GEN_CONFIG = {
-        "max_new_tokens": 256, # 限制生成内容最多256个新Token(太高生成冗余内容，太低过早截断)
+        "max_new_tokens": 128, # 限制生成内容最多256个新Token(太高生成冗余内容，太低过早截断)
         "temperature": 0.3, # 控制随机性（值越低输出越稳定，值越高创意性越强）
         "top_p": 0.7, # 核采样（只保留概率累计前90%的Token，低值更集中，高值更多样）
         "top_k": 30,  # k采样，从前k个候选token采样，小k更保守（10-30），大k更开放（50-100）
         "repetition_penalty": 1.5, # 惩罚重复内容，轻度1.0~1.2，严格1.5~2.0
         "do_sample": True, # 启用采样策略，False: 贪婪解码（选准确性最高）
-        "num_beams": 1,  # 1：单束，3~5：质量高但速度慢
-        # "early_stopping": True  # 遇到合理结果提前停止
+        "num_beams": 3,  # 1：单束，3~5：质量高但速度慢
+        "early_stopping": True  # 遇到合理结果提前停止
     }
 
     def __init__(self, model_name, tokenizer, user_lora=False, adapter_path=""):
         # 加载模型
         self.tokenizer = tokenizer
-        if self.tokenizer.pad_token is None:
-            self.tokenizer.pad_token = self.tokenizer.eos_token  # 或用特定tok
+        self.tokenizer.pad_token = self.tokenizer.eos_token  # 或用特定tok
         self.model = AutoModelForCausalLM.from_pretrained(
             model_name,
             offload_folder="./offload",  # 指定存储卸载权重的文件夹
@@ -38,12 +37,6 @@ class ResponseGenerator:
         if user_lora:
             # 加载适配器配置
             self.peft_config = PeftConfig.from_pretrained(adapter_path)
-            # 验证模型匹配性
-            if self.model.config.model_type != self.peft_config.base_model_name_or_path:
-                raise ValueError(  # 模型架构不匹配时报错
-                    f"基础模型类型不匹配！适配器训练于 {self.peft_config.base_model_name_or_path}，"
-                    f"当前加载的是 {self.model.config.model_type}"
-                )
 
             # 合并适配器，将LoRA适配器加载到基础模型
             self.model = PeftModel.from_pretrained(
@@ -97,7 +90,6 @@ class ResponseGenerator:
 
                 # 将用户输入加入历史
                 history.append({"role": "user", "content": user_input})
-
                 # 生成助手回复
                 print("\n🤖 正在思考...", end="", flush=True)
                 response = self.generate(history)
@@ -120,7 +112,7 @@ class ResponseGenerator:
                 print("正在重置对话历史...")
                 history = []  # 重置对话以防错误累积
 
-    def zero_shot(self, test_file, output_dir):
+    def file_response(self, test_file, output_dir):
         """数据集批量生成回复"""
         # 读取测试集
         with open(test_file, "r", encoding="utf-8") as f:
