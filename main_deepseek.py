@@ -76,5 +76,5 @@ if __name__ == "__main__":
     # model_name = "./local_models/deepseek-math-7b-instruct" # 本地调用
     model_name = "deepseek-ai/deepseek-math-7b-instruct" # 远程链接
     generate(model_name,True)
-    # file_response(model_name, "./data/test_deepseek.json", "./output/few_shot_result_filter_data/")
+    # file_response(model_name, "./data/test_deepseek.json", "./outcome/few_shot_result_filter_data/")
     # lora_train(model_name)
