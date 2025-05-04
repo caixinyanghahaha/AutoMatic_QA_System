@@ -79,11 +79,6 @@ class DialogueFilter:
             if valid and not contains_private_info(dialog):
                 filtered.append(dialog)
 
-        # 新增调试输出
-        # sample_texts = [turn['content'] for dialog in filtered[:3] for turn in dialog['messages']]
-        # print("\n预处理后文本示例：")
-        # for i, text in enumerate(sample_texts):
-        #     print(f"{i + 1}. {text}")
         return filtered
 
     def diversity_sampling(self,filtered_data):

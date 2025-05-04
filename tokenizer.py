@@ -33,9 +33,8 @@ class Data_Tokenizer:
     def __init__(self, tokenizer_name):
         self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_name, trust_remote_code=True)  # 从指定名称加载分词器
         self.tokenizer.DATA_CONFIG = self.DATA_CONFIG  # 动态绑定配置
-
-        # self.tokenizer.chat_template = self.DATA_CONFIG["dialog_template"] # 使用预设模板
         self.tokenizer.pad_token = self.tokenizer.eos_token  # 用结束符作为填充符
+        # self.tokenizer.chat_template = self.DATA_CONFIG["dialog_template"] # 使用预设模板
 
     def tokenize(self, examples):
         """分词处理，构建训练文本"""
@@ -57,7 +56,6 @@ class Data_Tokenizer:
             padding="max_length",  # 长度不够时将序列填充到最大长度
             padding_side="right",
             return_tensors = "pt",  # 返回PyTorch张量
-            # add_special_tokens = True  # 确保添加[CLS]、[SEP]等
         )
 
         # 添加labels字段用于训练
@@ -65,7 +63,6 @@ class Data_Tokenizer:
             [-100 if token == self.tokenizer.pad_token_id else token for token in seq]
             for seq in tokenized["input_ids"]
         ]
-
         return tokenized
 
 if __name__ == '__main__':

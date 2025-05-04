@@ -2,10 +2,10 @@ import os
 import json
 # os.environ['HF_HOME'] = 'D:/Program of code/JetBrains/PyCharm 2025.1/running-cache'
 
-from tokenizer_deepseek import Data_Tokenizer
-from model_deepseek import ModelLoader
-from train_deepseek import MathTutorTrainer
-from generator_deepseek import ResponseGenerator
+from tokenizer import Data_Tokenizer
+from model import ModelLoader
+from train import MathTutorTrainer
+from generator import ResponseGenerator
 from datasets import Dataset
 # import tkinter as tk
 # from GUI_deepseek import ResponseGeneratorGUI

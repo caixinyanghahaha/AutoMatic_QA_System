@@ -41,8 +41,6 @@ def split_conversation(history: str) -> List[Dict]:
         if not line:
             continue
         # 使用正则表达式检测行的开头是否包含说话者的名称（如 "Tutor" 或 "Student"）。
-        # 如果 current_speaker 和 current_text 不为空，说明已有一轮对话，保存这一轮的说话者和发言内容到 turns 列表。
-        # 更新 current_speaker 和 current_text，将当前说话者的发言内容初始化为当前行的文本。
         # 如果没有检测到说话者，说明这是当前说话者的续发言，将其追加到 current_text 中。
         speaker_match = re.match(r'^(Tutor|Student|老师|学生)[：:]?\s*(.*)', line)
         if speaker_match:
@@ -69,7 +67,6 @@ def split_conversation(history: str) -> List[Dict]:
             current_speaker = "assistant"
         elif current_speaker == "Student":
             current_speaker = "user"
-
         turns.append({
             "role": current_speaker,
             "content": ' '.join(current_text)
@@ -83,7 +80,6 @@ def evaluate_response(item):
     MI = item["Mistake_Identification"]
     PG = item["Providing_Guidance"]
     AC = item["Actionability"]
-
     # 为每个参数赋分
     if AC == "Yes":
         score += 2

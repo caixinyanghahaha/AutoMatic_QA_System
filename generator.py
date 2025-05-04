@@ -116,7 +116,6 @@ class ResponseGenerator:
         # 读取测试集
         with open(test_file, "r", encoding="utf-8") as f:
             test_data = json.load(f)  # 假设测试集是JSON列表格式
-
         # 执行批量测试
         results = []
         for idx, question in enumerate(tqdm(test_data, desc="Processing")):

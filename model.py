@@ -21,7 +21,6 @@ class ModelLoader:
             # q_proj: 生成查询向量, 用于计算与其他位置的关注度;
             # v_proj: 生成键向量, 与Query计算相似度;
             # k_proj: 生成值向量, 存储待提取的信息;
-            # o_proj: 将注意力结果映射回模型维度
             "target_modules": ["q_proj", "v_proj", "k_proj"],
             "lora_dropout": 0.2,
             "bias": "lora_only",
@@ -34,17 +33,16 @@ class ModelLoader:
 
     def load(self):
         """加载模型（自动适配硬件环境）"""
-        # 3. 加载模型
         model = AutoModelForCausalLM.from_pretrained(
             self.MODEL_CONFIG["model_name"],
             # local_files_only=True,  # 强制本地加载
             quantization_config=self.MODEL_CONFIG["quant_config"],
             device_map="auto",
-            torch_dtype=torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16,
+            torch_dtype=torch.float16,
             trust_remote_code=True
         )
 
-        # 4. 添加LoRA适配器
+        # 添加LoRA适配器
         peft_config = LoraConfig(
             **self.MODEL_CONFIG["lora_config"],
             task_type="CAUSAL_LM" # 指定任务为因果语言模型
@@ -53,9 +51,6 @@ class ModelLoader:
 
         # 训练优化设置
         model.enable_input_require_grads() # 确保输入张量的 requires_grad 属性正确传递
-
-        # 启用梯度检查点，用时间换显存，不保存全部中间激活值，反向传播时重新计算部分结果, 减少显存占用(约30-40%,速度降低20%)。
-        # model.gradient_checkpointing_enable()
 
         model.config.use_cache = False  # 训练时禁用缓存
 

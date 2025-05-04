@@ -42,11 +42,6 @@ class MathTutorTrainer:
         self.tokenizer = tokenizer
         self.dataset = dataset
 
-        # # GPU内存优化
-        # if torch.cuda.is_available():
-        #     torch.cuda.empty_cache()
-        #     self.model = self.model.to('cuda')
-
     def train(self):
         """执行GPU优化训练"""
         # 混合精度配置

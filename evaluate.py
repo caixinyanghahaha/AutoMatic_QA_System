@@ -26,12 +26,6 @@ class ResponseEvaluator:
         self.fluency_tokenizer = AutoTokenizer.from_pretrained("prithivida/grammar_error_correcter_v1")
 
         # 多轮对话组件
-        # self.nli_model = pipeline(
-        #     "text-classification",
-        #     model="roberta-large-mnli",
-        #     return_all_scores=True
-        # )
-        # 多轮对话组件
         self.nli_model = pipeline(
             # "zero-shot-classification",
             "text-classification",
@@ -77,26 +71,16 @@ class ResponseEvaluator:
             0.3 * float(self.similarity_model(f"{weighted_context} [SEP] {response}")[0]['score'])
 
         # 与历史信息一致性检查
-        # sc = []
-        # for hist in context[-2:]:  # 检查最近两轮
-        #     result = self.nli_model(f"{hist} [SEP] {response}", top_k=None)
-        #     contradiction = next((s['score'] for s in result[0] if s['label'] == 'CONTRADICTION'), 0.0)
-        #     sc.append(1 - contradiction)
-        # scores['consistency'] = np.mean(sc) if scores else 1.0
+        scores_list = []
+        for hist in context[-2:]:
+            # 使用NLI模型检查是否矛盾
+            nli_input = f"{hist} [SEP] {response}"
+            result = self.nli_model(nli_input)
+            # 假设第一个标签是矛盾
+            contradiction_score = result[0]['score'] if result[0]['label'] == 'CONTRADICTION' else 0.0
+            scores_list.append(1 - contradiction_score)
+        scores['consistency'] = np.mean(scores_list) if scores_list else 1.0
 
-        if context:
-            scores_list = []
-            for hist in context[-2:]:
-                # 使用NLI模型检查是否矛盾
-                nli_input = f"{hist} [SEP] {response}"
-                result = self.nli_model(nli_input)
-                # 假设第一个标签是矛盾
-                contradiction_score = result[0]['score'] if result[0]['label'] == 'CONTRADICTION' else 0.0
-                scores_list.append(1 - contradiction_score)
-
-            scores['consistency'] = np.mean(scores_list) if scores_list else 1.0
-        else:
-            scores['consistency'] = 1.0
 
         # 与参考回复的相似度（如果有）
         if reference:
