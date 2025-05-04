@@ -97,6 +97,7 @@ class ResponseEvaluator:
         """
         results = {
             "dialog_scores": [],
+            "total_score": 0,  # 总分字段
             "overall_scores": {
                 "grammar_errors": [],
                 "fluency": [],
@@ -126,14 +127,26 @@ class ResponseEvaluator:
                 context=context
             )
 
+            # 计算当前对话得分 (加权平均)
+            dialog_score = (
+                    0.2 * (1 - scores['grammar_errors'] / 10) +  # 语法错误(反向指标)
+                    0.2 * scores['fluency'] +  # 通顺度
+                    0.1 * (scores['sentiment'] + 1) / 2 +  # 情感(-1~1转为0~1)
+                    0.3 * scores['relevance'] +  # 相关性
+                    0.2 * scores['consistency']  # 一致性
+            )
+
             # 保存结果
             dialog_result = {
                 "dialog_id": len(results["dialog_scores"]),
                 "turn_scores": scores,
+                "dialog_score": dialog_score,  # 单个对话得分
                 "processing_time": dialog.get("processing_time", 0),
                 "timestamp": dialog.get("timestamp", "")
             }
             results["dialog_scores"].append(dialog_result)
+
+            results["total_score"] += dialog_score
 
             # 聚合总体指标
             for key in results["overall_scores"].keys():
@@ -142,18 +155,25 @@ class ResponseEvaluator:
         # 计算总体统计量
         for key, values in results["overall_scores"].items():
             results["overall_scores"][key] = {
-                "mean": float(np.mean(values)),
-                "std": float(np.std(values)),
-                "min": float(np.min(values)),
-                "max": float(np.max(values))
+                "mean": float(np.mean(values)), # 计算平均值
+                "std": float(np.std(values)), # 计算标准差
+                "min": float(np.min(values)), # 计算最小值
+                "max": float(np.max(values)) # 计算最大值
             }
-        print(results)
         return results
 
 # 使用示例
 if __name__ == "__main__":
     evaluator = ResponseEvaluator()
-    # 加载数据
-    with open("./outcome/zero_shot_result/results_20250503-170711.json", 'r', encoding='utf-8') as f:
-        raw_data = json.load(f)
-    evaluator.calculate_scores(raw_data)
+    file = [
+        "./outcome/zero_shot_result/results_20250501-145953.json",
+        "./outcome/zero_shot_result/results_20250503-170711.json",
+        "./outcome/few_shot_result/results_20250503-201601.json",
+        "./outcome/few_shot_result_filter_data/results_20250503-205134.json",
+    ]
+    for file_path in file:
+        # 加载数据
+        with open(file_path, 'r', encoding='utf-8') as f:
+            raw_data = json.load(f)
+        result = evaluator.calculate_scores(raw_data)
+        print(f"文件{file_path}的总分: {result['total_score']}")

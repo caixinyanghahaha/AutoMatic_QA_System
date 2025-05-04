@@ -67,8 +67,6 @@ class DialogueFilter:
                 if len(words) < self.FILTER_CONFIG["min_length"]:
                     valid = False
                     break
-                # 先进行拼写纠正再检查语法
-                # corrected = str(TextBlob(turn['content']).correct())  # 纠正拼写
                 # 计算语法错误密度，错误数 / 总词数 > 阀值则过滤
                 matches = grammar_tool.check(turn['content'])
                 error_density = len(matches) / len(words)
