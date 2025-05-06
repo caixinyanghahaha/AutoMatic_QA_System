@@ -66,7 +66,7 @@ class MathTutorTrainer:
                 pad_to_multiple_of=32,  # 根据精度调整，对齐显存访问
                 return_tensors="pt",
             ),  # 获取数据整理器
-            # eval_dataset=self.dataset.select(range(30))  # 示例验证集
+            eval_dataset=self.dataset.select(range(30))  # 示例验证集
         )
 
         # 显存占用分析

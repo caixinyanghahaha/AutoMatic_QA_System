@@ -7,8 +7,8 @@ from model import ModelLoader
 from train import MathTutorTrainer
 from generator import ResponseGenerator
 from datasets import Dataset
-# import tkinter as tk
-# from GUI_deepseek import ResponseGeneratorGUI
+import tkinter as tk
+from GUI import ResponseGeneratorGUI
 
 
 def lora_train(model_name):
@@ -59,18 +59,18 @@ def file_response(model_name, test_file, output_dir, lora=False):
         generator = ResponseGenerator(model_name, data_tokenizer.tokenizer)
     generator.file_response(test_file, output_dir)
 
-# def use_GUI(model_name, lora=False):
-#     """使用GUI交互见面进行问答"""
-#     data_tokenizer = Data_Tokenizer(model_name)
-#     if lora:
-#         adapter_path = "./output/math_tutor_lora"  # 替换为实际适配器路径
-#         generator = ResponseGenerator(model_name, data_tokenizer.tokenizer, True, adapter_path)
-#     else:
-#         generator = ResponseGenerator(model_name, data_tokenizer.tokenizer)
-#
-#     root = tk.Tk()
-#     app = ResponseGeneratorGUI(root, generator)
-#     root.mainloop()
+def use_GUI(model_name, lora=False):
+    """使用GUI交互见面进行问答"""
+    data_tokenizer = Data_Tokenizer(model_name)
+    if lora:
+        adapter_path = "./output/math_tutor_lora"  # 替换为实际适配器路径
+        generator = ResponseGenerator(model_name, data_tokenizer.tokenizer, True, adapter_path)
+    else:
+        generator = ResponseGenerator(model_name, data_tokenizer.tokenizer)
+
+    root = tk.Tk()
+    app = ResponseGeneratorGUI(root, generator)
+    root.mainloop()
 
 if __name__ == "__main__":
     # model_name = "./local_models/deepseek-math-7b-instruct" # 本地调用

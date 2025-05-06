@@ -5,7 +5,7 @@ import torch
 from nltk.translate.bleu_score import sentence_bleu
 from transformers import pipeline, AutoModelForSequenceClassification, AutoTokenizer
 import language_tool_python
-from typing import List, Optional
+import pandas as pd
 
 
 class ResponseEvaluator:
@@ -53,14 +53,11 @@ class ResponseEvaluator:
         inputs = self.fluency_tokenizer(response, return_tensors="pt", truncation=True) # 自动截断超过模型最大长度的文本，返回 PyTorch 张量格式
         with torch.no_grad():
             outputs = self.fluency_model(**inputs)
-            scores['fluency'] = float(torch.sigmoid(outputs.logits.mean()).item()) # 输出 logits 表示语法错误程度的原始分数，np.exp(-logits) 将模型输出映射到 (0,1] 区间，值越大表示越通顺（1为完美，接近0表示严重不通顺）。
+            scores['fluency'] = float(torch.sigmoid(outputs.logits.mean()).item()) # 输出 logits 表示语法错误程度的原始分数，应用 Sigmoid 函数将输出映射到 [0, 1] 范围，值越大表示越通顺（1为完美，接近0表示严重不通顺）。
 
         # 情感极性分析，将置信度分数转换为 [-1, 1] 区间，正向情感保持正值，负向情感转为负值，检测回复是否包含不合适的情感倾向（如负面回答礼貌问题）。
         sentiment = self.sentiment_analyzer(response)[0]
         scores['sentiment'] = sentiment['score'] * (1 if sentiment['label'] == 'POSITIVE' else -1)
-
-        # 与问题的相关性，输出 0-1 的相似度分数（1表示完全相关）
-        scores['relevance'] = float(self.similarity_model(f"{prompt} [SEP] {response}")[0]['score']) # 输入格式：问题 [SEP] 回复（[SEP] 是预定义的分隔符）
 
         # 增强相关性评估（考虑上下文）
         weighted_context = " ".join([
@@ -76,7 +73,6 @@ class ResponseEvaluator:
             # 使用NLI模型检查是否矛盾
             nli_input = f"{hist} [SEP] {response}"
             result = self.nli_model(nli_input)
-            # 假设第一个标签是矛盾
             contradiction_score = result[0]['score'] if result[0]['label'] == 'CONTRADICTION' else 0.0
             scores_list.append(1 - contradiction_score)
         scores['consistency'] = np.mean(scores_list) if scores_list else 1.0
@@ -98,13 +94,11 @@ class ResponseEvaluator:
         results = {
             "dialog_scores": [],
             "total_score": 0,  # 总分字段
-            "overall_scores": {
-                "grammar_errors": [],
-                "fluency": [],
-                "sentiment": [],
-                "relevance": [],
-                "consistency": [],
-            }
+            "total_grammar_errors": 0, # 总语法错误
+            "total_relevance": 0, # 总相关性
+            "total_consistency": 0, # 总一致性
+            "total_fluency": 0, # 总通顺度
+            "total_sentiment": 0 # 总情感值
         }
 
         for dialog in dataset:
@@ -147,33 +141,49 @@ class ResponseEvaluator:
             results["dialog_scores"].append(dialog_result)
 
             results["total_score"] += dialog_score
+            results["total_grammar_errors"] += scores['grammar_errors']
+            results["total_relevance"] += scores['relevance']
+            results["total_consistency"] += scores['consistency']
+            results["total_fluency"] += scores['fluency']
+            results["total_sentiment"] += scores['sentiment']
 
-            # 聚合总体指标
-            for key in results["overall_scores"].keys():
-                results["overall_scores"][key].append(scores[key])
-
-        # 计算总体统计量
-        for key, values in results["overall_scores"].items():
-            results["overall_scores"][key] = {
-                "mean": float(np.mean(values)), # 计算平均值
-                "std": float(np.std(values)), # 计算标准差
-                "min": float(np.min(values)), # 计算最小值
-                "max": float(np.max(values)) # 计算最大值
-            }
         return results
 
 # 使用示例
 if __name__ == "__main__":
     evaluator = ResponseEvaluator()
     file = [
-        "./outcome/zero_shot_result/results_20250501-145953.json",
-        "./outcome/zero_shot_result/results_20250503-170711.json",
-        "./outcome/few_shot_result/results_20250503-201601.json",
-        "./outcome/few_shot_result_filter_data/results_20250503-205134.json",
+        "zero_shot_result/20250501-145953",
+        "few_shot_result/20250503-201601",
+        "few_shot_result_filter_data/20250503-205134",
     ]
     for file_path in file:
         # 加载数据
-        with open(file_path, 'r', encoding='utf-8') as f:
+        path = "./outcome/" + file_path + ".json"
+        with open(path, 'r', encoding='utf-8') as f:
             raw_data = json.load(f)
         result = evaluator.calculate_scores(raw_data)
-        print(f"文件{file_path}的总分: {result['total_score']}")
+
+        # 创建数据框
+        df = pd.DataFrame({
+            "Metric": [
+                "Total Score",
+                "Total Grammar Errors",
+                "Total Relevance",
+                "Total Consistency",
+                "Total Fluency",
+                "Total Sentiment"
+            ],
+            "Value": [
+                result["total_score"],
+                result["total_grammar_errors"],
+                result["total_relevance"],
+                result["total_consistency"],
+                result["total_fluency"],
+                result["total_sentiment"]
+            ]
+        })
+
+        # 输出表格
+        print(f"文件{file_path}得分情况")
+        print(df)

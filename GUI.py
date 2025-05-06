@@ -1,3 +1,4 @@
+import time
 import tkinter as tk
 from tkinter import scrolledtext, messagebox, simpledialog
 import threading
@@ -10,6 +11,7 @@ class ResponseGeneratorGUI:
         self.setup_ui()
         self.generating = False  # 用于防止重复点击
         self.generator = generator
+        self.CHECK = 0
 
     def setup_ui(self):
         """设置界面UI"""

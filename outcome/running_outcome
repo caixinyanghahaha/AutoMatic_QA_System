@@ -365,3 +365,10 @@ how to calcuate 2^3
 2^3 = 2 * 2 * 2 = 8
 The answer is $\boxed{8}$.
 👤 用户:
+
+
+文件./outcome/zero_shot_result/results_20250501-145953.json的总分: 80.90195380449298
+文件./outcome/few_shot_result/results_20250503-201601.json的总分: 125.18485222660007
+文件./outcome/few_shot_result_filter_data/results_20250503-205134.json的总分: 124.98097931928935
+
+进程已结束，退出代码为 0
